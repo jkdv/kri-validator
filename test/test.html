@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KRI Validation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+$(document).ready(function() {
+	$.post("./test2.php", function(result) {
+		alert(result);
+	});
+});
+//]]>
+</script>
+</head>
+<body id="body">
+	<form method="post" action="http://www.kri.go.kr/kri/ra/cm/sso/wise_Encode.jsp">
+		<input type="text" name="AgcId" value="000100" />
+		<input type="text" name="RschrRegNo" value="10206181" />
+		<input type="text" name="returnUrl" value="http://xs.w.pw/result.php" />
+		<input type="submit" />
+	</form>
+</body>
+</html>

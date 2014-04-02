@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KRI Validation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+function validate_upload() {
+	var file = document.forms["upload_form"]["file"].value;
+	if (file == null || file == "") {
+		alert("파일을 선택해주세요.");
+		return false;
+	}
+	$("#upload_submit").prop("disabled", true);
+	$("#upload_reset").prop("disabled", true);
+	$("#upload_status").text("* 업로드 중입니다. 잠시만 기다려 주십시오.");
+	return true;
+}
+
+function certify_file(id) {
+	$.post("./phps/trigger_to_certify.php", {id:id}, function(r) {
+		alert(r);
+		location.reload();
+	});
+}
+
+function delete_file(id) {
+	if (confirm("정말로 삭제 하시겠습니까? 파일을 잃게됩니다.")) {
+		$.post("./phps/file_delete.php", {id:id}, function(r) {
+			alert(r);
+			location.reload();
+		});
+	}
+}
+
+function export_to_excel(id) {
+	alert("엑셀 내려받기를 시작합니다. 확인(OK) 버튼을 누르고 잠시만 기다려 주세요.\n3분이 지나도 다운로드가 되지 않을 경우 다시 내려받기를 클릭해주세요.");
+	location.href = "./phps/export_to_excel.php?id=" + id;
+}
+
+function stop_verifying(id) {
+	$.post("./phps/stop_verifying.php", {id:id}, function(r) {
+		alert(r);
+		location.reload();
+	});
+}
+
+$(document).ready(function() {
+	$.post("./phps/file_list_maker.php", function(xml) {
+		$(xml).find("file").each(function() {
+			var fileId = $(this).find("FILE_ID").text(),
+				fileName = $(this).find("ORG_FILE_NAME").text(),
+				regDate = $(this).find("REG_DATE").text(),
+				totalCnt = $(this).find("TOTAL_CNT").text(),
+				sciCnt = $(this).find("SCI_CNT").text(),
+				scopusCnt = $(this).find("SCOPUS_CNT").text(),
+				kciCnt = $(this).find("KCI_CNT").text(),
+				etcCnt = $(this).find("ETC_CNT").text(),
+				stateNm = $(this).find("STATE_NM").text(),
+				stateCode = $(this).find("STATE_CODE").text(),
+				startTime = $(this).find("CERT_START_TIME").text(),
+				avgSec = $(this).find("AVG_PROC_SEC").text(),
+				elapsedTime = $(this).find("ELAPSED_TIME").text(),
+				estimatedTime = $(this).find("ESTIMATED_TIME").text(),
+				procCnt = $(this).find("PROC_CNT").text(),
+				veriCnt = $(this).find("VERI_CNT").text(),
+				unveriCnt = $(this).find("UNVERI_CNT").text();
+
+			// Begin of row
+			var tr = "<tr>" +
+				"<td>" + parseInt(fileId.substr(1)) + "</td>" +
+				"<td><a href='./phps/file_download.php?id=" + fileId + "'>" + fileName + "</a></td>" +
+				"<td>" + regDate + "</td>" +
+				"<td>" + totalCnt + "</td>" +
+				"<td>" + sciCnt + "</td>" +
+				"<td>" + scopusCnt + "</td>" +
+				"<td>" + kciCnt + "</td>" +
+				"<td>" + etcCnt + "</td>" +
+				"<td>" + stateNm + "</td>" +
+				"<td>" + startTime + "</td>" +
+				"<td>" + avgSec + "</td>" +
+				"<td>" + elapsedTime + "</td>" +
+				"<td>" + estimatedTime + "</td>" +
+				"<td>" + procCnt + "</td>" +
+				"<td>" + veriCnt + "</td>" +
+				"<td>" + unveriCnt + "</td>";
+			
+			// Buttons
+			tr += "<td>";
+			if (stateCode == "01" || stateCode == "04") {
+				tr += "<a href=\"javascript:delete_file('" + fileId + "');\">삭제</a>";
+			}
+			tr += "</td>";
+			tr += "<td>";
+			if (stateCode == "01" || stateCode == "04") {
+				tr += "<button onclick=\"javascript:certify_file('" + fileId + "');\">검증하기</button>";
+			} else if (stateCode == "02") {
+				tr += "<button onclick=\"javascript:stop_verifying('" + fileId + "');\">중단하기</button>";
+			}
+			tr += "</td>";
+			tr += "<td>";
+				tr += "<a href=\"javascript:export_to_excel('" + fileId + "');\">내려받기</a>";
+			tr += "</td>";
+
+			// End of row
+			tr += "</tr>";
+
+			$("#file_list tbody").append(tr);
+		});
+	});
+});
+//]]>
+</script>
+</head>
+<body style="font-size: 9pt;">
+	<h2>엑셀 파일 업로드</h2>
+	<div style="padding-left: 10px;">
+		<form id="upload_form" method="post" enctype="multipart/form-data" action="phps/file_upload.php" onsubmit="return validate_upload();">
+			<input id="upload_file" type="file" name="file" />
+			<input id="upload_submit" type="submit" value="업로드" />
+			<input id="upload_reset" type="reset" value="리셋" />
+		</form>
+		<div id="upload_status"></div>
+	</div>
+	<br />
+	<h2>업로드된 파일 확인 및 다운로드</h2>
+	<table id="file_list" style="border-spacing: 10px; text-align: center;">
+		<thead>
+			<tr>
+				<th>파일ID</th>
+				<th>파일명</th>
+				<th>등록시간</th>
+				<th>총건수</th>
+				<th>(S)SCI급*</th>
+				<th>Scopus급</th>
+				<th>KCI급</th>
+				<th>기타</th>
+				<th>검증상태</th>
+				<th>검증시작시간</th>
+				<th>평균1건<br/>검증시간(초)</th>
+				<th>경과시간</th>
+				<th>(예상)종료시간</th>
+				<th>처리건수</th>
+				<th>검증</th>
+				<th>미검증</th>
+				<th></th>
+				<th></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+	<p>* (S)SCI급: SSCI, SCI, SCIE</p>
+</body>
+</html>

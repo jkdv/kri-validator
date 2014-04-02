@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KRI Validation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+function test() {
+	var pattern = $("#pattern").val();
+	var data = $("#data").val();
+	$.post("./tester.php", { pattern: pattern, data: data }, function(result) {
+		alert(result);
+	});
+}
+
+$(document).ready(function() {
+});
+//]]>
+</script>
+</head>
+<body>
+	<input id="pattern" type="text" size="80"/>
+	<button id="button" onclick="javascript:test()">테스트</button>
+	<br />
+	<textarea id="data" cols="80" rows="24"></textarea>
+</body>
+</html>
